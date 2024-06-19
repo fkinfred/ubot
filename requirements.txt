@@ -1,0 +1,10 @@
+python-dotenv
+pyrogram
+TgCrypto
+motor
+pyromod==1.1
+pykeyboard
+telegraph
+psutil
+py-tgcalls
+

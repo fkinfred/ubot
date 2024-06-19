@@ -1,0 +1,57 @@
+import os
+
+from pyrogram import filters
+from telegraph import Telegraph, exceptions, upload_file
+
+from Company import ubot
+from Company.config import PREFIX
+from Company.modules.bot import add_command_help
+
+telegraph = Telegraph()
+r = telegraph.create_account(short_name="Xadega-Userbot")
+auth_url = r["auth_url"]
+
+
+@ubot.on_message(filters.command(["tg", "telegraph"], PREFIX) & filters.me)
+async def uptotelegraph(c, m):
+    msg = await m.reply("**Processing . . .**")
+    if not m.reply_to_message:
+        await msg.edit(
+            "**Mohon Balas Ke Pesan, Untuk Mendapatkan Link dari Telegraph.**"
+        )
+        return
+    if m.reply_to_message.photo or m.reply_to_message.video:
+        m_d = await c.download_media(m.reply_to_message)
+        try:
+            media_url = upload_file(m_d)
+        except exceptions.TelegraphException as e:
+            await msg.edit(f"**ERROR:** `{e}`")
+            os.remove(m_d)
+            return
+        U_done = (
+            f"**Berhasil diupload ke** [Telegraph](https://telegra.ph/{media_url[0]})"
+        )
+        await msg.edit(U_done, disable_web_page_preview=True)
+        os.remove(m_d)
+    elif m.reply_to_message.text:
+        page_title = m.reply_to_message.text.split()[1]
+        page_text = m.reply_to_message.text
+        page_text = page_text.replace("\n", "<br>")
+        try:
+            response = telegraph.create_page(page_title, html_content=page_text)
+        except exceptions.TelegraphException as e:
+            await msg.edit(f"**ERROR:** `{e}`")
+            return
+        wow_graph = f"**Berhasil diupload ke** [Telegraph](https://telegra.ph/{response['path']})"
+        await msg.edit(wow_graph, disable_web_page_preview=True)
+
+
+add_command_help(
+    "telegraph",
+    [
+        [
+            f"telegraph atau ?tg",
+            "Balas ke Pesan Teks atau photo atau video untuk mengunggahnya ke telegraph.",
+        ],
+    ],
+)
